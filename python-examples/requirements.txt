@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+requests
+pandas
+matplotlib
+seaborn
+jupyter
+beautifulsoup4
+pydantic
+python-multipart
+aiofiles
+prometheus-client
+psutil

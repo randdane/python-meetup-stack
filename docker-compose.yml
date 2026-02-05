@@ -1,0 +1,105 @@
+# Python Meetup Demo Stack v2
+# A simplified, lightweight collection of Python-friendly applications for demonstrating container usage
+# 
+# Applications included:
+# - Jellyfin: Media server with Python plugin support
+# - it-tools: Developer utilities and tools
+# - Pi-hole: DNS ad-blocker for network security concepts
+# - Caddy: Reverse proxy for clean URL routing
+# - Python Dev Container: Jupyter + FastAPI development environment
+
+networks:
+  default:
+    driver: bridge
+
+volumes:
+  # Jellyfin volumes
+  jellyfin-config:
+  jellyfin-media:
+  
+  # it-tools volumes
+  it-tools-data:
+  
+  # Pi-hole volumes
+  pihole-config:
+  pihole-dnsmasq:
+  
+  
+  
+  # Python dev volume
+  python-dev-workspace:
+
+services:
+  # ===========================================
+  # it-tools - Developer Utilities
+  # ===========================================
+  it-tools:
+    image: corentinth/it-tools:latest
+    container_name: it-tools
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      - TZ=America/New_York
+
+  # ===========================================
+  # Jellyfin - Media Server
+  # ===========================================
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    container_name: jellyfin
+    restart: unless-stopped
+    ports:
+      - "8096:8096"
+    volumes:
+      - jellyfin-config:/config
+      - jellyfin-media:/media
+    environment:
+      - TZ=America/New_York
+
+  # ===========================================
+  # Pi-hole - DNS Ad-Blocker
+  # ===========================================
+  pihole:
+    image: pihole/pihole:latest
+    container_name: pihole
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    volumes:
+      - pihole-config:/etc/pihole
+      - pihole-dnsmasq:/etc/dnsmasq.d
+    environment:
+      - TZ=America/New_York
+      - WEBPASSWORD=pihole123
+      - PIHOLE_DNS_=1.1.1.1;8.8.8.8
+    cap_add:
+      - NET_ADMIN
+    dns:
+      - 127.0.0.1
+      - 1.1.1.1
+
+  # ===========================================
+  # Python Development Container
+  # ===========================================
+  python-dev:
+    image: python:3.12-slim
+    container_name: python-dev
+    restart: unless-stopped
+    ports:
+      - "8888:8888"  # Jupyter notebook port
+      - "8000:8000"  # FastAPI demo port
+    volumes:
+      - python-dev-workspace:/workspace
+      - ./python-examples:/workspace/examples
+    working_dir: /workspace
+    environment:
+      - PYTHONPATH=/workspace
+      - JUPYTER_ENABLE_LAB=yes
+    command: >
+      bash -c "
+      pip install jupyter fastapi uvicorn requests pandas matplotlib seaborn &&
+      jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token='' --NotebookApp.password=''
+      "
+    stdin_open: true
+    tty: true
