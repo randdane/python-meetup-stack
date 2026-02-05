@@ -1,0 +1,33 @@
+name: Docker Compose Validation
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Validate Docker Compose file
+      run: |
+        docker-compose config
+        
+    - name: Check for syntax errors in Python files
+      run: |
+        python -m py_compile python-examples/*.py
+        
+    - name: Validate shell scripts
+      run: |
+        shellcheck setup.sh || true
+        
+    - name: Check markdown files
+      uses: gaurav-nelson/github-action-markdown-link-check@v1
+      with:
+        use-quiet-mode: 'yes'
+        use-verbose-mode: 'yes'
